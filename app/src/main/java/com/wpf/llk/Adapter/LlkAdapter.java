@@ -1,28 +1,33 @@
 package com.wpf.llk.Adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AnimationUtils;
 
-import com.facebook.drawee.view.SimpleDraweeView;
+import com.bumptech.glide.Glide;
+import com.wpf.llk.MyImageView;
 import com.wpf.llk.R;
 import com.wpf.llk.Utlis.Config;
+import com.wpf.llk.Utlis.Get;
 import com.wpf.llk.Utlis.ViewConfig;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class LlkAdapter extends RecyclerView.Adapter<LlkAdapter.LlkViewHolder> {
 
     private Context context;
     private AdapterOnClickListener adapterOnClickListener;
-    private ViewConfig[] viewConfigs = new ViewConfig[Config.xLen*Config.yLen];
+    private List<ViewConfig> viewConfigs = new ArrayList<>();
 
-    public LlkAdapter(ViewConfig[] viewConfigs) {
+    public LlkAdapter(List<ViewConfig> viewConfigs) {
         this.viewConfigs = viewConfigs;
     }
 
+    @SuppressLint("InflateParams")
     @Override
     public LlkViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         context = parent.getContext();
@@ -31,8 +36,14 @@ public class LlkAdapter extends RecyclerView.Adapter<LlkAdapter.LlkViewHolder> {
 
     @Override
     public void onBindViewHolder(LlkViewHolder holder, int position) {
-        holder.sd.setImageURI(Uri.parse(viewConfigs[position].isRemove?"":"res:///"+viewConfigs[position].id));
-        holder.sd.setVisibility(viewConfigs[position].isRemove?View.INVISIBLE:View.VISIBLE);
+        ViewConfig viewConfig = viewConfigs.get(position);
+//        holder.img.setImageURI(Uri.parse(viewConfig.isRemove?"":"res:///"+viewConfig.id));
+        if(viewConfig.isRemove)
+            Glide.clear(holder.img);
+        else
+            Glide.with(context).load(viewConfig.id).into(holder.img);
+        holder.img.setVisibility(viewConfig.isRemove?View.INVISIBLE:View.VISIBLE);
+        holder.itemView.setOnClickListener(viewConfig.isRemove?null:holder);
     }
 
     @Override
@@ -46,11 +57,11 @@ public class LlkAdapter extends RecyclerView.Adapter<LlkAdapter.LlkViewHolder> {
 
     public class LlkViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        private SimpleDraweeView sd;
+        private MyImageView img;
 
         public LlkViewHolder(View itemView) {
             super(itemView);
-            sd = (SimpleDraweeView) itemView.findViewById(R.id.sd);
+            img = (MyImageView) itemView.findViewById(R.id.img);
             itemView.setOnClickListener(this);
         }
 
@@ -58,17 +69,20 @@ public class LlkAdapter extends RecyclerView.Adapter<LlkAdapter.LlkViewHolder> {
         public void onClick(View v) {
             try {
                 int position = getAdapterPosition();
-                if(!viewConfigs[position].isUp) {
-                    v.startAnimation(AnimationUtils.loadAnimation(context, R.anim.up));
-                    viewConfigs[position].isUp = true;
-                    v.setTag(viewConfigs[position]);
+                ViewConfig viewConfig = viewConfigs.get(position);
+                if(!viewConfig.isUp) {
+                    v.setBackground(Get.getDrawable(context,R.mipmap.pic_click));
+                    //v.startAnimation(AnimationUtils.loadAnimation(context, R.anim.up));
+                    viewConfig.isUp = true;
+                    v.setTag(viewConfig);
                     Config.clicked.add(v);
                 } else {
-                    v.startAnimation(AnimationUtils.loadAnimation(context, R.anim.down));
-                    viewConfigs[position].isUp = false;
+                    v.setBackground(null);
+                    //v.startAnimation(AnimationUtils.loadAnimation(context, R.anim.down));
+                    viewConfig.isUp = false;
                     Config.clicked.remove(v);
                 }
-                if(!viewConfigs[position].isRemove)
+                if(!viewConfig.isRemove)
                     adapterOnClickListener.onClick(position);
             } catch (NullPointerException e) {
                 e.printStackTrace();

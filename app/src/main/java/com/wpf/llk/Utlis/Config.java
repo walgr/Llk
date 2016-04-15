@@ -1,5 +1,7 @@
 package com.wpf.llk.Utlis;
 
+import android.annotation.SuppressLint;
+import android.util.Log;
 import android.view.View;
 
 import com.wpf.llk.R;
@@ -13,31 +15,100 @@ import java.util.List;
  */
 
 public class Config {
-    public static int[] pics = new int[]{R.mipmap.pic_2,R.mipmap.pic_4,R.mipmap.pic_6,R.mipmap.pic_8,
-            R.mipmap.pic_10,R.mipmap.pic_12,R.mipmap.pic_14,R.mipmap.pic_16,R.mipmap.pic_18,
-            R.mipmap.pic_20,R.mipmap.pic_22,R.mipmap.pic_24,R.mipmap.pic_26,R.mipmap.pic_28,
-            R.mipmap.pic_30,R.mipmap.pic_32,R.mipmap.pic_34,R.mipmap.pic_36,R.mipmap.pic_38,
-            R.mipmap.pic_40,R.mipmap.pic_42,R.mipmap.pic_44,R.mipmap.pic_46,R.mipmap.pic_48,
-            R.mipmap.pic_50,R.mipmap.pic_52,R.mipmap.pic_54,R.mipmap.pic_56,R.mipmap.pic_58,
-            R.mipmap.pic_60,R.mipmap.pic_62,R.mipmap.pic_64,R.mipmap.pic_66,R.mipmap.pic_68,
-            R.mipmap.pic_70,R.mipmap.pic_72,R.mipmap.pic_74,R.mipmap.pic_76,R.mipmap.pic_78,
-            R.mipmap.pic_80,R.mipmap.pic_82,R.mipmap.pic_84,R.mipmap.pic_86,R.mipmap.pic_88,
-            R.mipmap.pic_90,R.mipmap.pic_92,R.mipmap.pic_94,R.mipmap.pic_96,R.mipmap.pic_98,
-            R.mipmap.pic_100,R.mipmap.pic_102,R.mipmap.pic_104,R.mipmap.pic_106,R.mipmap.pic_108,
-            R.mipmap.pic_110,R.mipmap.pic_112,R.mipmap.pic_114,R.mipmap.pic_116,R.mipmap.pic_118,
-            R.mipmap.pic_120};
-    public static int xLen = 6;
+    public static int[] pic1s = new int[]{R.mipmap.pic1_1,R.mipmap.pic1_2,R.mipmap.pic1_3,
+            R.mipmap.pic1_4,R.mipmap.pic1_5,R.mipmap.pic1_6,R.mipmap.pic1_7,R.mipmap.pic1_8,
+            R.mipmap.pic1_9,R.mipmap.pic1_10,R.mipmap.pic1_11,R.mipmap.pic1_12,R.mipmap.pic1_13,
+            R.mipmap.pic1_14,R.mipmap.pic1_15,R.mipmap.pic1_16,R.mipmap.pic1_17,R.mipmap.pic1_18,
+            R.mipmap.pic1_19,R.mipmap.pic1_20,R.mipmap.pic1_21,R.mipmap.pic1_22,R.mipmap.pic1_23,
+            R.mipmap.pic1_24,R.mipmap.pic1_25,R.mipmap.pic1_26,R.mipmap.pic1_27,R.mipmap.pic1_28,
+            R.mipmap.pic1_29,R.mipmap.pic1_30};
+
+    public static int[] pic2s = new int[]{R.mipmap.pic2_1,R.mipmap.pic2_2,R.mipmap.pic2_3,
+            R.mipmap.pic2_4,R.mipmap.pic2_5,R.mipmap.pic2_6,R.mipmap.pic2_7,R.mipmap.pic2_8,
+            R.mipmap.pic2_9,R.mipmap.pic2_10,R.mipmap.pic2_11,R.mipmap.pic2_12,R.mipmap.pic2_13,
+            R.mipmap.pic2_14,R.mipmap.pic2_15,R.mipmap.pic2_16,R.mipmap.pic2_17,R.mipmap.pic2_18,
+            R.mipmap.pic2_19,R.mipmap.pic2_20,R.mipmap.pic2_21,R.mipmap.pic2_22,R.mipmap.pic2_23,
+            R.mipmap.pic2_24,R.mipmap.pic2_25,R.mipmap.pic2_26,R.mipmap.pic2_27,R.mipmap.pic2_28,
+            R.mipmap.pic2_29,R.mipmap.pic2_30};
+
+    public static int xLen = 8;
     public static int yLen = 8;
-    public static int ji = 30;
-
-
+    public static int ji = 10;
+    public static int difficulty = 2;
+    public static List<ViewConfig> viewConfigs;
     public static List<View> clicked = new ArrayList<>();
+    public static List<Integer> line = new ArrayList<>();
+    private static boolean stop;
 
     //选中的2个能否消除的规则
     public static boolean rule() {
-        boolean canRemove = false;
-        if(((ViewConfig)clicked.get(0).getTag()).id == ((ViewConfig)clicked.get(1).getTag()).id)
-            canRemove = true;
-        return canRemove;
+        return selectDif();
+    }
+
+    private static boolean selectDif() {
+        int id0 = ((ViewConfig)clicked.get(0).getTag()).Id;
+        boolean type0 = ((ViewConfig)clicked.get(0).getTag()).type;
+        int id1 = ((ViewConfig)clicked.get(1).getTag()).Id;
+        boolean type1 = ((ViewConfig)clicked.get(1).getTag()).type;
+        if(type0 != type1 && id0 == id1) {
+            int position0 = ((ViewConfig) clicked.get(0).getTag()).position;
+            int position1 = ((ViewConfig) clicked.get(1).getTag()).position;
+            switch (difficulty) {
+                case 1:
+                    return true;
+                case 2:
+                    if(Get.positionIsBorderLine(position0,position1))
+                        return true;
+                case 3:
+                    clearAll();
+                    findLine(position0);
+                    Log.d("结果", Get.getListString());
+                    return line.contains(position0) && line.contains(position1);
+            }
+        }
+        return false;
+    }
+
+    @SuppressLint("DefaultLocale")
+    private static void findLine(int position) {
+        if(position < 0 || position > Config.xLen * Config.yLen -1) {
+            return;
+        }
+        ViewConfig viewConfig = viewConfigs.get(position);
+        if(viewConfig.dir == 4) return;
+        if(!line.contains(position))
+            line.add(position);
+        for(int i = viewConfig.dir;i<=4;++i) {
+            int nexPosition = Get.getPosition(position,i);
+            if(nexPosition < 0 || nexPosition > Config.xLen * Config.yLen -1) continue;
+            ViewConfig viewConfig1 = viewConfigs.get(nexPosition);
+            if (Get.positionIsNext(position,nexPosition)
+                    && viewConfig1.position == ((ViewConfig) clicked.get(1).getTag()).position) {
+                if(!line.contains(nexPosition))
+                    line.add(nexPosition);
+                stop = true;
+                break;
+            }
+        }
+        if(stop) {
+            stop = false;
+        } else {
+            for(int i = viewConfig.dir;i <= 4;++i) {
+                viewConfig.dir = i;
+                int nexPosition = Get.getPosition(position, i);
+                if(nexPosition < 0 || nexPosition > Config.xLen * Config.yLen - 1) continue;
+                ViewConfig viewConfig1 = viewConfigs.get(nexPosition);
+                if (Get.positionIsNext(position,nexPosition) &&
+                        viewConfig1.isRemove && !line.contains(nexPosition))
+                    findLine(nexPosition);
+            }
+        }
+    }
+
+    private static void clearAll() {
+        for(Integer position : line) {
+            viewConfigs.get(position).dir = 1;
+        }
+        line.clear();
     }
 }
